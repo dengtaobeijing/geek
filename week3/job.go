@@ -61,7 +61,7 @@ func main() {
 		return serverApp2(srv2, serverMux2)
 	})
 
-	//10秒后停止 serverApp2
+	//10秒后停止 serverApp2  测试程序停止
 	err := stopServerApp2(srv2, errCtx)
 	if err != nil {
 		fmt.Println("http stop error: ", err)
@@ -77,7 +77,7 @@ func main() {
 //启动第一个http 服务
 func serverApp1(srv *http.Server, serverMux *http.ServeMux) error {
 
-	serverMux.HandleFunc("/app1", func(resp http.ResponseWriter, req *http.Request) {
+	serverMux.HandleFunc("/", func(resp http.ResponseWriter, req *http.Request) {
 
 		fmt.Fprintln(resp, "serverApp1")
 	})
@@ -91,7 +91,7 @@ func serverApp1(srv *http.Server, serverMux *http.ServeMux) error {
 //启动第二个http服务
 func serverApp2(srv *http.Server, serverMux *http.ServeMux) error {
 
-	serverMux.HandleFunc("/app2", func(resp http.ResponseWriter, req *http.Request) {
+	serverMux.HandleFunc("/", func(resp http.ResponseWriter, req *http.Request) {
 		fmt.Fprintln(resp, "serverApp2")
 	})
 
