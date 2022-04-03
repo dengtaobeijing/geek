@@ -26,38 +26,39 @@ func main() {
 	group.Go(func() error {
 		for {
 			select {
-			case <-errCtx.Done(): // 因为 cancel、timeout、deadline 都可能导致 Done 被 close
+			case <-errCtx.Done(): //
 				return errCtx.Err()
 			case <-chanel: // 因为 kill -9 或其他而终止
 				cancel()
 			}
 		}
 	})
-
+	serverMux1 := http.NewServeMux()
 	//启动第一个 app
-	srv1 := &http.Server{Addr: "0.0.0.0:9011"}
+	srv1 := &http.Server{Addr: ":9011", Handler: serverMux1}
 
 	group.Go(func() error {
-		<-errCtx.Done() //阻塞。因为 cancel、timeout、deadline 都可能导致 Done 被 close
+		<-errCtx.Done()
 		fmt.Println("http serverApp1 stop")
 		return srv1.Shutdown(errCtx)
 	})
 	group.Go(func() error {
 		//err := checkGoroutineErr(errCtx)
-		return serverApp1(srv1)
+		return serverApp1(srv1, serverMux1)
 	})
 
 	//启动第二个 app
-	srv2 := &http.Server{Addr: ":9012"}
+	serverMux2 := http.NewServeMux()
+	srv2 := &http.Server{Addr: ":9012", Handler: serverMux2}
 	group.Go(func() error {
-		<-errCtx.Done() //阻塞。因为 cancel、timeout、deadline 都可能导致 Done 被 close
+		<-errCtx.Done() //阻塞。
 		fmt.Println("http serverApp2 stop")
 		return srv2.Shutdown(errCtx)
 	})
 
 	//serverApp2(srv2)
 	group.Go(func() error {
-		return serverApp2(srv2)
+		return serverApp2(srv2, serverMux2)
 	})
 
 	//10秒后停止 serverApp2
@@ -74,9 +75,9 @@ func main() {
 }
 
 //启动第一个http 服务
-func serverApp1(srv *http.Server) error {
+func serverApp1(srv *http.Server, serverMux *http.ServeMux) error {
 
-	http.HandleFunc("/app1", func(resp http.ResponseWriter, req *http.Request) {
+	serverMux.HandleFunc("/app1", func(resp http.ResponseWriter, req *http.Request) {
 
 		fmt.Fprintln(resp, "serverApp1")
 	})
@@ -88,16 +89,13 @@ func serverApp1(srv *http.Server) error {
 }
 
 //启动第二个http服务
-func serverApp2(srv *http.Server) error {
+func serverApp2(srv *http.Server, serverMux *http.ServeMux) error {
 
-	//mux := http.NewServeMux()
-	http.HandleFunc("/app2", func(resp http.ResponseWriter, req *http.Request) {
+	serverMux.HandleFunc("/app2", func(resp http.ResponseWriter, req *http.Request) {
 		fmt.Fprintln(resp, "serverApp2")
 	})
 
 	err := srv.ListenAndServe()
-
-	//err = http.ListenAndServe(":9012", mux)
 
 	return err
 
