@@ -49,12 +49,14 @@ func (d *RedisDatastore) fullKey(key string, start int64) string {
 
 func (d *RedisDatastore) Add(key string, start, value int64) (int64, error) {
 	k := d.fullKey(key, start)
+	fmt.Println(key, k)
 	c, err := d.client.IncrBy(k, value).Result()
+	fmt.Println(err)
 	if err != nil {
 		return 0, err
 	}
-	// Ignore the possible error from EXPIRE command.
-	d.client.Expire(k, d.ttl).Result() // nolint:errcheck
+	// 设置过期时间
+	d.client.Expire(k, d.ttl).Result()
 	return c, err
 }
 
@@ -63,7 +65,7 @@ func (d *RedisDatastore) Get(key string, start int64) (int64, error) {
 	value, err := d.client.Get(k).Result()
 	if err != nil {
 		if err == redis.Nil {
-			// redis.Nil is not an error, it only indicates the key does not exist.
+			// 不存在
 			err = nil
 		}
 		return 0, err
@@ -126,7 +128,7 @@ func newLimiters() (limiters []Limiter) {
 			return sw.NewSyncWindow(resourceName, sw.NewBlockingSynchronizer(store, syncInterval))
 		})
 		limiters = append(limiters, Limiter{
-			name: fmt.Sprintf("lim-%d", i),
+			name: fmt.Sprintf("limit:%d", i),
 			lim:  lim,
 			stop: stop,
 		})

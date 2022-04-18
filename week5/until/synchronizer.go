@@ -5,23 +5,21 @@ import (
 	"time"
 )
 
-// Datastore represents the central datastore.
+// 数据存储表示中央数据存储
 type Datastore interface {
-	// Add adds delta to the count of the window represented
-	// by start, and returns the new count.
+	// 添加补充说三角洲窗口的计算由开始,并返回新的计数。
 	Add(key string, start, delta int64) (int64, error)
 
-	// Get returns the count of the window represented by start.
+	// 返回窗口的计算由开始
 	Get(key string, start int64) (int64, error)
 }
 
-// syncHelper is a helper that will be leveraged by both BlockingSynchronizer
-// and NonblockingSynchronizer.
+// 同步助手是一个帮手,将利用阻塞同步器和非阻塞同步器
 type syncHelper struct {
 	store        Datastore
 	syncInterval time.Duration
 
-	inProgress bool // Whether the synchronization is in progress.
+	inProgress bool // 是否在进行同步
 	lastSynced time.Time
 }
 
@@ -29,7 +27,7 @@ func newSyncHelper(store Datastore, syncInterval time.Duration) *syncHelper {
 	return &syncHelper{store: store, syncInterval: syncInterval}
 }
 
-// IsTimeUp returns whether it's time to sync data to the central datastore.
+// 是时候回报是否时间同步数据到中央数据存储
 func (h *syncHelper) IsTimeUp(now time.Time) bool {
 	return !h.inProgress && now.Sub(h.lastSynced) >= h.syncInterval
 }
@@ -68,11 +66,8 @@ func (h *syncHelper) Sync(req SyncRequest) (resp SyncResponse, err error) {
 	}, nil
 }
 
-// BlockingSynchronizer does synchronization in a blocking mode and consumes
-// no extra goroutine.
-//
-// It's recommended to use BlockingSynchronizer in low-concurrency scenarios,
-// either for higher accuracy, or for less goroutine consumption.
+// 阻塞同步器同步阻塞模式和不消耗额外goroutine。
+//推荐使用阻塞同步器在低并发性场景中,精度高,或少goroutine消费。
 type BlockingSynchronizer struct {
 	helper *syncHelper
 }
@@ -87,8 +82,7 @@ func (s *BlockingSynchronizer) Start() {}
 
 func (s *BlockingSynchronizer) Stop() {}
 
-// Sync sends the window's count to the central datastore, and then update
-// the window's count according to the response from the datastore.
+// 同步发送窗口的数到中央数据存储,然后更新窗口的计算根据数据存储的响应
 func (s *BlockingSynchronizer) Sync(now time.Time, makeReq MakeFunc, handleResp HandleFunc) {
 	if s.helper.IsTimeUp(now) {
 		s.helper.Begin(now)
@@ -103,10 +97,6 @@ func (s *BlockingSynchronizer) Sync(now time.Time, makeReq MakeFunc, handleResp 
 	}
 }
 
-// NonblockingSynchronizer does synchronization in a non-blocking mode. To achieve
-// this, it needs to spawn a goroutine to exchange data with the central datastore.
-//
-// It's recommended to always use NonblockingSynchronizer in high-concurrency scenarios.
 type NonblockingSynchronizer struct {
 	reqC  chan SyncRequest
 	respC chan SyncResponse
@@ -136,8 +126,6 @@ func (s *NonblockingSynchronizer) Stop() {
 	<-s.exitC
 }
 
-// syncLoop is a worker that receives a sync request and generates the
-// corresponding sync response.
 func (s *NonblockingSynchronizer) syncLoop() {
 	for {
 		select {
@@ -161,14 +149,9 @@ exit:
 	close(s.exitC)
 }
 
-// Sync tries to send the window's count to the central datastore, or to update
-// the window's count according to the response from the latest synchronization.
-// Since the exchange with the datastore is always slower than the execution of Sync,
-// usually Sync must be called at least twice to update the window's count finally.
 func (s *NonblockingSynchronizer) Sync(now time.Time, makeReq MakeFunc, handleResp HandleFunc) {
 	if s.helper.IsTimeUp(now) {
-		// Just try to sync. If this fails, we assume the previous synchronization
-		// is still ongoing, and we wait for the next time.
+
 		select {
 		case s.reqC <- makeReq():
 			s.helper.Begin(now)
@@ -177,7 +160,7 @@ func (s *NonblockingSynchronizer) Sync(now time.Time, makeReq MakeFunc, handleRe
 	}
 
 	if s.helper.InProgress() {
-		// Try to get the response from the latest synchronization.
+
 		select {
 		case resp := <-s.respC:
 			handleResp(resp)

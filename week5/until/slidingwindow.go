@@ -74,7 +74,7 @@ func (lim *Limiter) SetLimit(newLimit int64) {
 	lim.limit = newLimit
 }
 
-// 运行通过的时间
+// 是否允许通行
 func (lim *Limiter) Allow() bool {
 	return lim.AllowN(time.Now(), 1)
 }
@@ -90,7 +90,6 @@ func (lim *Limiter) AllowN(now time.Time, n int64) bool {
 	weight := float64(lim.size-elapsed) / float64(lim.size)
 	count := int64(weight*float64(lim.prev.Count())) + lim.curr.Count()
 
-	// Trigger the possible sync behaviour.
 	defer lim.curr.Sync(now)
 
 	if count+n > lim.limit {
@@ -103,26 +102,19 @@ func (lim *Limiter) AllowN(now time.Time, n int64) bool {
 
 // 更新窗口时间
 func (lim *Limiter) advance(now time.Time) {
-	// Calculate the start boundary of the expected current-window.
+
 	newCurrStart := now.Truncate(lim.size)
 
 	diffSize := newCurrStart.Sub(lim.curr.Start()) / lim.size
 	if diffSize >= 1 {
-		// The current-window is at least one-window-size behind the expected one.
 
 		newPrevCount := int64(0)
 		if diffSize == 1 {
-			// The new previous-window will overlap with the old current-window,
-			// so it inherits the count.
-			//
-			// Note that the count here may be not accurate, since it is only a
-			// SNAPSHOT of the current-window's count, which in itself tends to
-			// be inaccurate due to the asynchronous nature of the sync behaviour.
+
 			newPrevCount = lim.curr.Count()
 		}
 		lim.prev.Reset(newCurrStart.Add(-lim.size), newPrevCount)
 
-		// The new current-window always has zero count.
 		lim.curr.Reset(newCurrStart, 0)
 	}
 }
