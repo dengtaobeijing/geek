@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "network/api/sbi/job/v1;v1";
+
+service Job {
+    rpc IntegratingJob(IntegratingJobReq) returns (IntegratingJobReply) {} 
+}
+ 
+message IntegratingJobReq{
+    
+}
+
+message IntegratingJobReply {
+
+}

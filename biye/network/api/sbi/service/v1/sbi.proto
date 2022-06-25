@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+option go_package = "network/api/sbi/admin/v1;v1";
+
+service Sbi {
+    rpc ListSbi(ListSbiReq) returns (ListSbiReply){}
+    rpc GetSbiById(GetSbiByIdReq) returns (GetSbiByIdReply){}
+    rpc CreateOrders(CreateOrdersReq) returns (CreateOrdersReply){}
+    rpc GetOrdersByUserId (GetOrdersByUserIdReq) returns (GetOrdersByUserReply){}
+}
+
+message GetOrdersByUserIdReq{
+    int64 user_id =1;
+}
+
+message GetOrdersByUserReply{
+    message Orders { 
+        int64 user_id=1;
+        int64 sbi_id=2;
+        double price=3;
+        string receiver =4;
+        string address=5;
+        string mobile=6;
+    } 
+    repeated Orders orders=1;
+}
+
+
+
+message CreateOrdersReq {
+    message Orders { 
+        int64 user_id=1;
+        int64 sbi_id=2;
+        double price=3;
+        string receiver =4;
+        string address=5;
+        string mobile=6;
+    }
+    Orders orders=1;
+}
+
+message CreateOrdersReply {
+
+}
+
+
+ 
+message GetSbiByIdReq{
+    int64 id =1;
+}
+
+message GetSbiByIdReply{
+    message Sbi {
+        int64 id =1;
+        string title=2;
+        string artist=3;
+        double price=4;
+        string create_at=5;
+    }
+    Sbi sbi =1;
+}
+
+message ListSbiReq {
+    int64 page_num =1;
+    int64 page_size =2;
+}
+ 
+message ListSbiReply{
+    message Sbi {
+        int64 id =1;
+        string title=2;
+        string artist=3;
+        double price=4;
+        string create_at=5;
+    }
+    int64 count=1;
+    repeated Sbi sbis=2;
+}

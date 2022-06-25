@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option go_package = "network/api/sbi/admin/v1;v1";
+
+service Admin {
+    rpc UpdateOrders(UpdateOrdersReq) returns (UpdateOrdersReply) {}
+    rpc UpdateSbi(UpdateSbiReq) returns (UpdateSbiReply) {}
+}
+ 
+message UpdateOrdersReq{
+    int64 user_id =1;
+    message Orders {
+        int64 id=1;
+        int64 user_id=2;
+        int64 sbi_id=3;
+        double price=4;
+        string  receiver =5;
+        string address=6;
+        string mobile=7;
+        string create_at=8;
+    }
+    Orders orders =2;
+}
+
+message UpdateOrdersReply {
+
+}
+
+message UpdateSbiReq{
+    int64 user_id =1;
+    message Sbi {
+        int64 id =1;
+        string title=2;
+        string artist=3;
+        double price=4;
+        string create_at=5;
+    }
+    Sbi sbi =2;
+}
+
+message UpdateSbiReply {
+
+}

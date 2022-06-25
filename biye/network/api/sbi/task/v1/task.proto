@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option go_package = "network/api/sbi/task/v1;v1";
+
+service Task {
+    rpc IntegratingCount(IntegratingCountReq) returns (IntegratingCountReply) {} 
+    rpc GetIntegrating(GetIntegratingReq) returns (GetIntegratingReply) {}
+}
+
+ 
+message GetIntegratingReq{
+    int64 user_id =1;
+}
+
+message GetIntegratingReply{
+    int64 grade =1;
+}
+
+message IntegratingCountReq{
+}
+
+message IntegratingCountReply {
+}

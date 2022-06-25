@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option go_package = "network/api/sbi/interface/v1;v1";
+ 
+service Interface {
+    rpc GetOrdersAndIntegrating(GetOrdersAndIntegratingReq) returns (GetOrdersAndIntegratingReply) {} 
+}
+
+message GetOrdersAndIntegratingReq {
+    int64 user_id =1;
+}
+
+
+message GetOrdersAndIntegratingReply {  
+    message Orders { 
+        int64 user_id=1;
+        int64 sbi_id=2;
+        double price=3;
+        string receiver =4;
+        string address=5;
+        string mobile=6;
+    }
+    int64 user_id=1;
+    repeated Orders orders=2;
+    int64 grade =3;
+}
